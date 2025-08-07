@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes gradient-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background: linear-gradient(-45deg, #10b981, #3b82f6, #10b981, #3b82f6);
+  background-size: 400% 400%;
+  animation: gradient-move 3s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes subtle-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes snake-flow-1 {
+  0% {
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 200 1000;
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: -1000;
+  }
+}
+
+@keyframes snake-flow-2 {
+  0% {
+    stroke-dasharray: 0 800;
+    stroke-dashoffset: 0;
+  }
+  40% {
+    stroke-dasharray: 150 800;
+    stroke-dashoffset: -75;
+  }
+  100% {
+    stroke-dasharray: 0 800;
+    stroke-dashoffset: -800;
+  }
+}
+
+.hero-animated-bg {
+  position: relative;
+  background: linear-gradient(-45deg, #f0fdf4, #dbeafe, #ecfdf5, #dbeafe);
+  background-size: 400% 400%;
+  animation: subtle-gradient 8s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.calligraphy-path-1 {
+  animation: snake-flow-1 14s ease-in-out infinite;
+}
+
+.calligraphy-path-2 {
+  animation: snake-flow-2 18s ease-in-out infinite;
+  animation-delay: -9s;
+}
