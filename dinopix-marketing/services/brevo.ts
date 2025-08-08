@@ -17,6 +17,7 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
     // Log the environment for debugging
     console.log('Environment:', process.env.NODE_ENV);
     console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
     
     // In development mode without API key, simulate success/failure
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
@@ -43,7 +44,7 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
       },
       body: JSON.stringify({
         email: data.email,
-        listIds: [4], // Replace with your actual list ID
+        listIds: [3], // Updated to match the correct list ID from .env
         attributes: {
           'SIGNUP_SOURCE': 'Early Access Waitlist',
           'SIGNUP_DATE': new Date().toISOString()
@@ -104,6 +105,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
     // Log the environment for debugging
     console.log('Environment:', process.env.NODE_ENV);
     console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
     
     // In development mode without API key, simulate success
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
