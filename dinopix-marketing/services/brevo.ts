@@ -30,18 +30,30 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.log('Brevo API error:', errorData);
       
-      if (response.status === 400 && errorData.message) {
-        const message = errorData.message.toLowerCase();
-        if (message.includes('contact already exist') || 
-            message.includes('already exists') || 
-            message.includes('duplicate')) {
+      // Check for duplicate contact in various error formats
+      if (response.status === 400) {
+        if (errorData.message) {
+          const message = errorData.message.toLowerCase();
+          if (message.includes('contact already exist') || 
+              message.includes('already exists') || 
+              message.includes('duplicate')) {
+            throw new Error('You\'re already on our waitlist! We\'ll notify you when we launch.');
+          }
+        }
+        
+        // Check for duplicate parameter error
+        if (errorData.code === 'duplicate_parameter') {
           throw new Error('You\'re already on our waitlist! We\'ll notify you when we launch.');
         }
-      }
-      
-      if (errorData.code === 'duplicate_parameter') {
-        throw new Error('You\'re already on our waitlist! We\'ll notify you when we launch.');
+        
+        // Check for duplicate email in the error details
+        if (errorData.code === 'invalid_parameter' && 
+            errorData.message && 
+            errorData.message.toLowerCase().includes('already exists')) {
+          throw new Error('You\'re already on our waitlist! We\'ll notify you when we launch.');
+        }
       }
       
       throw new Error(`API Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
@@ -49,10 +61,17 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
   } catch (error) {
     console.error('Error adding contact to Brevo list:', error);
     
+    // Pass through the custom error message for duplicate contacts
     if (error instanceof Error && error.message.includes('already on our waitlist')) {
       throw error;
     }
     
+    // Check if this is a network error
+    if (error instanceof Error && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    
+    // Generic error for all other cases
     throw new Error('Failed to join waitlist. Please try again.');
   }
 };
