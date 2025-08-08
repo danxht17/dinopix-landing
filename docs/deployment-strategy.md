@@ -9,8 +9,8 @@
 
 ### Staging Environment
 - **Platform**: Netlify
-- **Marketing Site**: `staging--dinopix-marketing.netlify.app`
-- **Application**: `staging--dinopix-app.netlify.app`
+- **Marketing Site**: `dinopix-marketing-staging.netlify.app`
+- **Application**: `dinopix-app-staging.netlify.app`
 - **Branch**: `staging`
 
 ### Production Environment
@@ -70,7 +70,9 @@
    git push origin staging
    ```
    - Netlify automatically deploys from staging branch
-   - Test on staging environment
+   - Test on staging environment:
+     - Marketing: `dinopix-marketing-staging.netlify.app`
+     - Application: `dinopix-app-staging.netlify.app`
 
 3. **Production Deployment**
    ```bash

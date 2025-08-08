@@ -54,6 +54,7 @@ npm run dev
 The Next.js marketing site automatically proxies `/app/*` requests to the Vite application:
 
 - **Development**: `localhost:3000/app/` → `localhost:5173/`
+- **Staging**: `dinopix-marketing-staging.netlify.app/app/` → `dinopix-app-staging.netlify.app/`
 - **Production**: `dinopix.ai/app/` → `app.dinopix.ai/`
 
 ## 📊 SEO Benefits
@@ -72,22 +73,35 @@ The Next.js marketing site automatically proxies `/app/*` requests to the Vite a
 
 ## 🛠️ Development Workflow
 
-1. **Marketing changes** → Edit `dinopix-marketing/`
-2. **App features** → Edit `dinopix-app/`
-3. **Both running** → Seamless development experience
-4. **Independent deploys** → Deploy marketing and app separately
+1. **Local Development**
+   - **Marketing changes** → Edit `dinopix-marketing/`
+   - **App features** → Edit `dinopix-app/`
+   - **Both running** → Seamless development experience
+
+2. **Staging Deployment**
+   - Push changes to `staging` branch
+   - Netlify automatically deploys to staging sites
+   - Test on staging environment
+
+3. **Production Deployment**
+   - Create pull request from `staging` to `main`
+   - After approval, merge to `main`
+   - Netlify automatically deploys to production
 
 ## 🚀 Deployment Strategy
 
-### Marketing Site
-- **Platform**: Vercel/Netlify
-- **Domain**: `dinopix.ai`
-- **Features**: SSR, ISR for blog posts
+### Staging Environment
+- **Platform**: Netlify
+- **Marketing Site**: `dinopix-marketing-staging.netlify.app`
+- **Application**: `dinopix-app-staging.netlify.app`
+- **Branch**: `staging`
 
-### Application  
-- **Platform**: CDN or app subdomain
-- **Domain**: `app.dinopix.ai` 
-- **Features**: Optimized SPA build
+### Production Environment
+- **Platform**: Netlify
+- **Marketing Site**: `dinopix.ai`
+- **Application**: `app.dinopix.ai`
+- **Branch**: `main`
+- **Features**: SSR, ISR for blog posts, Optimized SPA build
 
 ## 📈 Success Metrics
 
