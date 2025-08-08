@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # DO NOT include the actual API key here - set it in the Netlify UI
 
 [context.staging]
   command = "cp public/robots.staging.txt public/robots.txt && npm run build"
