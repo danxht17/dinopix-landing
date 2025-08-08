@@ -120,8 +120,8 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
         'api-key': process.env.NEXT_PUBLIC_BREVO_API_KEY || ''
       },
       body: JSON.stringify({
-        to: [{ email: 'support@dinopix.ai', name: 'Dinopix Support' }],
-        sender: { email: 'noreply@dinopix.ai', name: 'Dinopix Contact Form' },
+        to: [{ email: 'support@dinopix.com.au', name: 'Dinopix Support' }],
+        sender: { email: 'support@dinopix.com.au', name: 'Dinopix Contact Form' },
         replyTo: { email: data.email, name: data.name },
         subject: `Contact Form: ${data.subject}`,
         htmlContent: `
@@ -132,7 +132,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
           <p><strong>Message:</strong></p>
           <p>${data.message.replace(/\n/g, '<br>')}</p>
           <hr>
-          <p><small>Submitted from dinopix.ai contact form</small></p>
+          <p><small>Submitted from dinopix.com.au contact form</small></p>
         `
       })
     });
