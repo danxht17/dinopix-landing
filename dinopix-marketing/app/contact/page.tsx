@@ -27,19 +27,38 @@ export default function Contact() {
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
 
   useEffect(() => {
+    // Only load reCAPTCHA if site key is available
+    if (!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+      console.warn('reCAPTCHA site key not found');
+      return;
+    }
+
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
+    if (existingScript) {
+      setRecaptchaLoaded(true);
+      return;
+    }
+
     // Load reCAPTCHA script
     const script = document.createElement('script');
     script.src = 'https://www.google.com/recaptcha/api.js';
     script.async = true;
     script.defer = true;
-    script.onload = () => setRecaptchaLoaded(true);
+    script.onload = () => {
+      console.log('reCAPTCHA script loaded');
+      setRecaptchaLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load reCAPTCHA script');
+    };
     document.head.appendChild(script);
 
     return () => {
       // Cleanup script on unmount
-      const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
-      if (existingScript) {
-        document.head.removeChild(existingScript);
+      const scriptToRemove = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
+      if (scriptToRemove) {
+        document.head.removeChild(scriptToRemove);
       }
     };
   }, []);
@@ -324,12 +343,20 @@ export default function Contact() {
                 </div>
 
                 {/* reCAPTCHA widget */}
-                {recaptchaLoaded && (
+                {recaptchaLoaded && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
                   <div className="flex justify-center">
                     <div 
                       className="g-recaptcha" 
                       data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                     ></div>
+                  </div>
+                )}
+                
+                {/* Debug info in development */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500">
+                    reCAPTCHA loaded: {recaptchaLoaded.toString()}<br/>
+                    Site key available: {!!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? 'Yes' : 'No'}
                   </div>
                 )}
 
