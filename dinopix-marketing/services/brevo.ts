@@ -1,5 +1,6 @@
 export interface EarlyAccessData {
   email: string;
+  honeypot?: string; // Hidden field for bot detection
 }
 
 export interface ContactFormData {
@@ -7,6 +8,8 @@ export interface ContactFormData {
   email: string;
   subject: string;
   message: string;
+  honeypot?: string; // Hidden field for bot detection
+  recaptchaToken?: string; // reCAPTCHA verification token
 }
 
 // For development/testing, use a mock implementation
@@ -14,10 +17,16 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void> => {
   try {
-    // Log the environment for debugging
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
-    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
+    // Honeypot validation - if filled, likely a bot
+    if (data.honeypot && data.honeypot.trim() !== '') {
+      console.warn('Bot detected in early access signup');
+      throw new Error('Submission rejected. Please try again.');
+    }
+    // Log the environment for debugging (development only)
+    if (isDevelopment) {
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    }
     
     // In development mode without API key, simulate success/failure
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
@@ -102,10 +111,36 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
 
 export const sendContactFormEmail = async (data: ContactFormData): Promise<void> => {
   try {
-    // Log the environment for debugging
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
-    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
+    // Honeypot validation - if filled, likely a bot
+    if (data.honeypot && data.honeypot.trim() !== '') {
+      console.warn('Bot detected in contact form submission');
+      throw new Error('Submission rejected. Please try again.');
+    }
+
+    // reCAPTCHA validation - verify token with Google
+    if (data.recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
+      const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${data.recaptchaToken}`
+      });
+      
+      const recaptchaResult = await recaptchaResponse.json();
+      if (!recaptchaResult.success) {
+        console.warn('reCAPTCHA verification failed:', recaptchaResult);
+        throw new Error('reCAPTCHA verification failed. Please try again.');
+      }
+    } else if (!isDevelopment) {
+      // In production, require reCAPTCHA
+      throw new Error('reCAPTCHA verification is required.');
+    }
+    // Log the environment for debugging (development only)
+    if (isDevelopment) {
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    }
     
     // In development mode without API key, simulate success
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {

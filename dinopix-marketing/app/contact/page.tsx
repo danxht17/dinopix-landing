@@ -1,9 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { sendContactFormEmail, addToEarlyAccessList, type ContactFormData } from '@/services/brevo';
 import SEO from '@/components/SEO';
+
+// Declare grecaptcha global
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
 
 export default function Contact() {
   const [formData, setFormData] = useState<ContactFormData & { marketingOptIn: boolean }>({
@@ -11,18 +18,42 @@ export default function Contact() {
     email: '',
     subject: '',
     message: '',
-    marketingOptIn: false
+    marketingOptIn: false,
+    honeypot: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+
+  useEffect(() => {
+    // Load reCAPTCHA script
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setRecaptchaLoaded(true);
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
+    
+    // Map honeypot field name
+    const fieldName = name === 'website' ? 'honeypot' : name;
+    
     setFormData(prev => ({ 
       ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+      [fieldName]: type === 'checkbox' ? checked : value 
     }));
   };
 
@@ -33,13 +64,22 @@ export default function Contact() {
     setError('');
 
     try {
-      // Send contact form email
-      await sendContactFormEmail(formData);
+      // Get reCAPTCHA token
+      let recaptchaToken = '';
+      if (window.grecaptcha && recaptchaLoaded) {
+        recaptchaToken = window.grecaptcha.getResponse();
+        if (!recaptchaToken && process.env.NODE_ENV === 'production') {
+          throw new Error('Please complete the reCAPTCHA verification.');
+        }
+      }
+
+      // Send contact form email with reCAPTCHA token
+      await sendContactFormEmail({ ...formData, recaptchaToken });
       
       // If user opted in for marketing, add to early access list
       if (formData.marketingOptIn) {
         try {
-          await addToEarlyAccessList({ email: formData.email });
+          await addToEarlyAccessList({ email: formData.email, honeypot: formData.honeypot });
         } catch (err) {
           // Don't fail the whole form if adding to list fails
           console.warn('Failed to add to early access list:', err);
@@ -47,8 +87,17 @@ export default function Contact() {
       }
       
       setIsSubmitted(true);
+      
+      // Reset reCAPTCHA
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      // Reset reCAPTCHA on error
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +223,17 @@ export default function Contact() {
             {!isSubmitted ? (
               <div>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Honeypot field - hidden from users but visible to bots */}
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.honeypot || ''}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+                
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                     Name *
@@ -263,9 +323,19 @@ export default function Contact() {
                   </label>
                 </div>
 
+                {/* reCAPTCHA widget */}
+                {recaptchaLoaded && (
+                  <div className="flex justify-center">
+                    <div 
+                      className="g-recaptcha" 
+                      data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                    ></div>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !recaptchaLoaded}
                   className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   {isLoading ? 'Sending...' : 'Send Message'}

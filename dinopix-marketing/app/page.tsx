@@ -7,6 +7,7 @@ import SEO from '@/components/SEO';
 
 export default function Home() {
   const [email, setEmail] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -157,6 +158,16 @@ export default function Home() {
               {!isSubmitted ? (
                 <div>
                   <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md">
+                    {/* Honeypot field - hidden from users but visible to bots */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      style={{ display: 'none' }}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
                     <input
                       type="email"
                       placeholder="Enter your email"
@@ -328,6 +339,16 @@ export default function Home() {
           {!isSubmitted ? (
             <div>
               <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                {/* Honeypot field - hidden from users but visible to bots */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  style={{ display: 'none' }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
                 <input
                   type="email"
                   placeholder="Enter your email"
