@@ -5,10 +5,14 @@ import Link from 'next/link';
 import { sendContactFormEmail, addToEarlyAccessList, type ContactFormData } from '@/services/brevo';
 import SEO from '@/components/SEO';
 
-// Declare grecaptcha global
+// Declare grecaptcha enterprise global
 declare global {
   interface Window {
     grecaptcha: {
+      enterprise: {
+        execute: (siteKey: string, options: { action: string }) => Promise<string>;
+        ready: (callback: () => void) => void;
+      };
       getResponse: () => string;
       reset: () => void;
       render: (element: string | HTMLElement, options: Record<string, unknown>) => void;
@@ -38,29 +42,29 @@ export default function Contact() {
     }
 
     // Check if script already exists
-    const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
+    const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/enterprise.js"]');
     if (existingScript) {
       setRecaptchaLoaded(true);
       return;
     }
 
-    // Load reCAPTCHA script
+    // Load reCAPTCHA Enterprise script
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = 'https://www.google.com/recaptcha/enterprise.js';
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      console.log('reCAPTCHA script loaded');
+      console.log('reCAPTCHA Enterprise script loaded');
       setRecaptchaLoaded(true);
     };
     script.onerror = () => {
-      console.error('Failed to load reCAPTCHA script');
+      console.error('Failed to load reCAPTCHA Enterprise script');
     };
     document.head.appendChild(script);
 
     return () => {
       // Cleanup script on unmount
-      const scriptToRemove = document.querySelector('script[src="https://www.google.com/recaptcha/api.js"]');
+      const scriptToRemove = document.querySelector('script[src="https://www.google.com/recaptcha/enterprise.js"]');
       if (scriptToRemove) {
         document.head.removeChild(scriptToRemove);
       }
@@ -87,22 +91,29 @@ export default function Contact() {
     setError('');
 
     try {
-      // Get reCAPTCHA token
+      // Get reCAPTCHA Enterprise token
       let recaptchaToken = '';
       
-      // Check if reCAPTCHA is available and loaded
+      // Check if reCAPTCHA Enterprise is available and loaded
       if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
         if (!recaptchaLoaded) {
           throw new Error('Security verification is still loading. Please wait a moment and try again.');
         }
         
-        if (!window.grecaptcha) {
+        if (!window.grecaptcha?.enterprise) {
           throw new Error('Security verification failed to load. Please refresh the page and try again.');
         }
         
-        recaptchaToken = window.grecaptcha.getResponse();
-        if (!recaptchaToken) {
-          throw new Error('Please complete the security verification below.');
+        // Execute reCAPTCHA Enterprise with action
+        try {
+          recaptchaToken = await window.grecaptcha.enterprise.execute(
+            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+            { action: 'submit_contact_form' }
+          );
+          console.log('reCAPTCHA Enterprise token generated:', recaptchaToken.substring(0, 20) + '...');
+        } catch (error) {
+          console.error('reCAPTCHA Enterprise execution failed:', error);
+          throw new Error('Security verification failed. Please refresh the page and try again.');
         }
       }
 
@@ -120,17 +131,8 @@ export default function Contact() {
       }
       
       setIsSubmitted(true);
-      
-      // Reset reCAPTCHA
-      if (window.grecaptcha) {
-        window.grecaptcha.reset();
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
-      // Reset reCAPTCHA on error
-      if (window.grecaptcha) {
-        window.grecaptcha.reset();
-      }
     } finally {
       setIsLoading(false);
     }
@@ -356,20 +358,12 @@ export default function Contact() {
                   </label>
                 </div>
 
-                {/* reCAPTCHA widget */}
-                {recaptchaLoaded && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-                  <div className="flex justify-center">
-                    <div 
-                      className="g-recaptcha" 
-                      data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                    ></div>
-                  </div>
-                )}
+                {/* reCAPTCHA Enterprise - invisible, no widget needed */}
                 
                 {/* Debug info in development */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="text-xs text-gray-500">
-                    reCAPTCHA loaded: {recaptchaLoaded.toString()}<br/>
+                    reCAPTCHA Enterprise loaded: {recaptchaLoaded.toString()}<br/>
                     Site key available: {!!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? 'Yes' : 'No'}
                   </div>
                 )}

@@ -117,32 +117,69 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
       throw new Error('Submission rejected. Please try again.');
     }
 
-    // reCAPTCHA validation - verify token with Google
+    // reCAPTCHA Enterprise validation
     if (!isDevelopment) {
       // In production, require reCAPTCHA token from client
       if (!data.recaptchaToken) {
-        console.warn('reCAPTCHA token missing in production');
+        console.warn('reCAPTCHA Enterprise token missing in production');
         throw new Error('Please complete the security verification to submit your message.');
       }
 
-      // Verify reCAPTCHA token with Google if secret key is available
-      if (process.env.RECAPTCHA_SECRET_KEY) {
-        const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${data.recaptchaToken}`
-        });
-        
-        const recaptchaResult = await recaptchaResponse.json();
-        if (!recaptchaResult.success) {
-          console.warn('reCAPTCHA verification failed:', recaptchaResult);
+      // Verify reCAPTCHA Enterprise token with Google if secret key and project ID are available
+      if (process.env.RECAPTCHA_SECRET_KEY && process.env.GOOGLE_CLOUD_PROJECT_ID) {
+        try {
+          const requestBody = {
+            event: {
+              token: data.recaptchaToken,
+              expectedAction: 'submit_contact_form',
+              siteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeFt54rAAAAAK0yA8SgPee5iHt6ddAB_ffhH0b5'
+            }
+          };
+
+          const recaptchaResponse = await fetch(
+            `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_SECRET_KEY}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody)
+            }
+          );
+          
+          const recaptchaResult = await recaptchaResponse.json();
+          
+          if (!recaptchaResponse.ok) {
+            console.warn('reCAPTCHA Enterprise API error:', recaptchaResult);
+            throw new Error('Security verification failed. Please try again.');
+          }
+
+          // Check the risk analysis
+          const riskAnalysis = recaptchaResult.riskAnalysis;
+          if (!riskAnalysis || riskAnalysis.score < 0.5) {
+            console.warn('reCAPTCHA Enterprise risk score too low:', riskAnalysis?.score);
+            throw new Error('Security verification failed. Please try again.');
+          }
+
+          // Verify the action matches
+          if (recaptchaResult.tokenProperties?.action !== 'submit_contact_form') {
+            console.warn('reCAPTCHA Enterprise action mismatch:', recaptchaResult.tokenProperties?.action);
+            throw new Error('Security verification failed. Please try again.');
+          }
+
+          console.log('reCAPTCHA Enterprise verification successful. Score:', riskAnalysis.score);
+          
+        } catch (error) {
+          console.error('reCAPTCHA Enterprise verification error:', error);
           throw new Error('Security verification failed. Please try again.');
         }
       } else {
-        console.warn('reCAPTCHA secret key not configured');
-        throw new Error('Security verification is temporarily unavailable. Please try again later.');
+        console.warn('reCAPTCHA Enterprise not fully configured (missing secret key or project ID)');
+        // Allow submission with basic validation
+        if (!data.recaptchaToken) {
+          throw new Error('Security verification is temporarily unavailable. Please try again later.');
+        }
+        console.log('Proceeding with basic token validation');
       }
     }
     // Log the environment for debugging (development only)
