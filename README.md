@@ -95,6 +95,7 @@ The Next.js marketing site automatically proxies `/app/*` requests to the Vite a
 - **Marketing Site**: `dinopix-marketing-staging.netlify.app`
 - **Application**: `dinopix-app-staging.netlify.app`
 - **Branch**: `staging`
+- **Access**: Password protected (see deployment docs)
 
 ### Production Environment
 - **Platform**: Netlify
