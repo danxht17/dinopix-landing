@@ -89,10 +89,20 @@ export default function Contact() {
     try {
       // Get reCAPTCHA token
       let recaptchaToken = '';
-      if (window.grecaptcha && recaptchaLoaded) {
+      
+      // Check if reCAPTCHA is available and loaded
+      if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+        if (!recaptchaLoaded) {
+          throw new Error('Security verification is still loading. Please wait a moment and try again.');
+        }
+        
+        if (!window.grecaptcha) {
+          throw new Error('Security verification failed to load. Please refresh the page and try again.');
+        }
+        
         recaptchaToken = window.grecaptcha.getResponse();
-        if (!recaptchaToken && process.env.NODE_ENV === 'production') {
-          throw new Error('Please complete the reCAPTCHA verification.');
+        if (!recaptchaToken) {
+          throw new Error('Please complete the security verification below.');
         }
       }
 
@@ -366,10 +376,12 @@ export default function Contact() {
 
                 <button
                   type="submit"
-                  disabled={isLoading || !recaptchaLoaded}
+                  disabled={isLoading || (!!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaLoaded)}
                   className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  {isLoading ? 'Sending...' : 'Send Message'}
+                  {isLoading ? 'Sending...' : 
+                   (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaLoaded) ? 'Loading security verification...' : 
+                   'Send Message'}
                 </button>
 
                 <p className="text-xs text-gray-500">

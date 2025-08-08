@@ -118,23 +118,32 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
     }
 
     // reCAPTCHA validation - verify token with Google
-    if (data.recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
-      const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${data.recaptchaToken}`
-      });
-      
-      const recaptchaResult = await recaptchaResponse.json();
-      if (!recaptchaResult.success) {
-        console.warn('reCAPTCHA verification failed:', recaptchaResult);
-        throw new Error('reCAPTCHA verification failed. Please try again.');
+    if (!isDevelopment) {
+      // In production, require reCAPTCHA token from client
+      if (!data.recaptchaToken) {
+        console.warn('reCAPTCHA token missing in production');
+        throw new Error('Please complete the security verification to submit your message.');
       }
-    } else if (!isDevelopment) {
-      // In production, require reCAPTCHA
-      throw new Error('reCAPTCHA verification is required.');
+
+      // Verify reCAPTCHA token with Google if secret key is available
+      if (process.env.RECAPTCHA_SECRET_KEY) {
+        const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${data.recaptchaToken}`
+        });
+        
+        const recaptchaResult = await recaptchaResponse.json();
+        if (!recaptchaResult.success) {
+          console.warn('reCAPTCHA verification failed:', recaptchaResult);
+          throw new Error('Security verification failed. Please try again.');
+        }
+      } else {
+        console.warn('reCAPTCHA secret key not configured');
+        throw new Error('Security verification is temporarily unavailable. Please try again later.');
+      }
     }
     // Log the environment for debugging (development only)
     if (isDevelopment) {
