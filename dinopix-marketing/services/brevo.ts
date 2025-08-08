@@ -9,8 +9,31 @@ export interface ContactFormData {
   message: string;
 }
 
+// For development/testing, use a mock implementation
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void> => {
   try {
+    // Log the environment for debugging
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    
+    // In development mode without API key, simulate success/failure
+    if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
+      console.log('Development mode: Simulating API call');
+      
+      // Simulate duplicate email check
+      if (data.email.includes('existing') || data.email.includes('duplicate')) {
+        console.log('Development mode: Simulating duplicate email');
+        throw new Error('You\'re already on our waitlist! We\'ll notify you when we launch.');
+      }
+      
+      // Simulate success for other emails
+      console.log('Development mode: Simulating successful registration');
+      return;
+    }
+    
+    // Real API call for production or when API key is available
     const response = await fetch('https://api.brevo.com/v3/contacts', {
       method: 'POST',
       headers: {
@@ -78,6 +101,17 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
 
 export const sendContactFormEmail = async (data: ContactFormData): Promise<void> => {
   try {
+    // Log the environment for debugging
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    
+    // In development mode without API key, simulate success
+    if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
+      console.log('Development mode: Simulating contact form submission');
+      console.log('Contact form data:', data);
+      return;
+    }
+    
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -104,10 +138,18 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
     });
 
     if (!response.ok) {
+      const errorData = await response.json();
+      console.log('Brevo API error:', errorData);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   } catch (error) {
     console.error('Error sending contact form email:', error);
+    
+    // Check if this is a network error
+    if (error instanceof Error && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    
     throw new Error('Failed to send message. Please try again.');
   }
 };
