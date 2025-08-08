@@ -39,6 +39,59 @@ npm install
 npm run dev
 ```
 
+### Local Domain Setup (Optional)
+For local development with custom domains:
+
+1. **Edit your hosts file**:
+   ```
+   # Add to /etc/hosts (Mac/Linux) or C:\Windows\System32\drivers\etc\hosts (Windows)
+   127.0.0.1 dinopix.local
+   127.0.0.1 app.dinopix.local
+   ```
+
+2. **Configure local SSL certificates** (optional):
+   - Use [mkcert](https://github.com/FiloSottile/mkcert) to create local SSL certificates
+   - Follow the mkcert installation instructions for your OS
+   ```bash
+   mkcert -install
+   mkcert dinopix.local "*.dinopix.local"
+   ```
+
+3. **Update Next.js configuration**:
+   - Add to dinopix-marketing/next.config.ts:
+   ```typescript
+   // For local development with custom domains
+   const isDev = process.env.NODE_ENV === 'development';
+   const useLocalDomains = process.env.USE_LOCAL_DOMAINS === 'true';
+   
+   const nextConfig = {
+     // ... other config
+     async rewrites() {
+       return [
+         {
+           source: '/app/:path*',
+           destination: isDev 
+             ? 'http://app.dinopix.local:5173/:path*' // Local domain
+             : 'http://localhost:5173/:path*' // Default local
+         }
+       ];
+     }
+   };
+   ```
+
+4. **Start servers with domain support**:
+   ```bash
+   # In dinopix-marketing directory
+   USE_LOCAL_DOMAINS=true npm run dev -- -H dinopix.local
+   
+   # In dinopix-app directory
+   npm run dev -- --host app.dinopix.local
+   ```
+
+5. **Access in browser**:
+   - Marketing site: http://dinopix.local:3000
+   - Application: http://app.dinopix.local:5173
+
 ## 📍 URL Architecture
 
 | **URL** | **Technology** | **Purpose** |
