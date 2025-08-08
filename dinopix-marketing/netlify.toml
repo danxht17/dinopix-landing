@@ -4,16 +4,24 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # DO NOT include the actual API key here - set it in the Netlify UI
+
+[context.staging]
+  command = "cp public/robots.staging.txt public/robots.txt && npm run build"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [[redirects]]
   from = "/app/*"
-  to = "https://dinopix-app.netlify.app/:splat"
+  to = "https://dinopix-app-staging.netlify.app/:splat"
   status = 200
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[edge_functions]]
+  path = "/*"
+  function = "staging-auth"

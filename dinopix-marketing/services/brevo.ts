@@ -17,6 +17,7 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
     // Log the environment for debugging
     console.log('Environment:', process.env.NODE_ENV);
     console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
     
     // In development mode without API key, simulate success/failure
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
@@ -43,7 +44,7 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
       },
       body: JSON.stringify({
         email: data.email,
-        listIds: [4], // Replace with your actual list ID
+        listIds: [3], // Updated to match the correct list ID from .env
         attributes: {
           'SIGNUP_SOURCE': 'Early Access Waitlist',
           'SIGNUP_DATE': new Date().toISOString()
@@ -104,6 +105,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
     // Log the environment for debugging
     console.log('Environment:', process.env.NODE_ENV);
     console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
     
     // In development mode without API key, simulate success
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
@@ -120,8 +122,8 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
         'api-key': process.env.NEXT_PUBLIC_BREVO_API_KEY || ''
       },
       body: JSON.stringify({
-        to: [{ email: 'support@dinopix.ai', name: 'Dinopix Support' }],
-        sender: { email: 'noreply@dinopix.ai', name: 'Dinopix Contact Form' },
+        to: [{ email: 'support@dinopix.com.au', name: 'Dinopix Support' }],
+        sender: { email: 'support@dinopix.com.au', name: 'Dinopix Contact Form' },
         replyTo: { email: data.email, name: data.name },
         subject: `Contact Form: ${data.subject}`,
         htmlContent: `
@@ -132,7 +134,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
           <p><strong>Message:</strong></p>
           <p>${data.message.replace(/\n/g, '<br>')}</p>
           <hr>
-          <p><small>Submitted from dinopix.ai contact form</small></p>
+          <p><small>Submitted from dinopix.com.au contact form</small></p>
         `
       })
     });

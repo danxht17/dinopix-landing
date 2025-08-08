@@ -9,9 +9,10 @@
 
 ### Staging Environment
 - **Platform**: Netlify
-- **Marketing Site**: `staging--dinopix-marketing.netlify.app`
-- **Application**: `staging--dinopix-app.netlify.app`
+- **Marketing Site**: `dinopix-marketing-staging.netlify.app`
+- **Application**: `dinopix-app-staging.netlify.app`
 - **Branch**: `staging`
+- **Protection**: Password protected with robots.txt and security headers
 
 ### Production Environment
 - **Platform**: Netlify
@@ -70,7 +71,10 @@
    git push origin staging
    ```
    - Netlify automatically deploys from staging branch
-   - Test on staging environment
+   - Test on staging environment (password protected):
+     - Marketing: `dinopix-marketing-staging.netlify.app`
+     - Application: `dinopix-app-staging.netlify.app`
+     - Password: Use the value set in PASSWORD_PROTECTION environment variable
 
 3. **Production Deployment**
    ```bash
@@ -100,6 +104,25 @@
 
 2. **Subdomain (app.dinopix.ai)**
    - Add CNAME record pointing to Netlify
+
+## Staging Protection Measures
+
+The staging sites are protected from public discovery using several methods:
+
+1. **Password Protection**
+   - Edge function authentication requiring a password
+   - Password stored as environment variable `PASSWORD_PROTECTION`
+   - Session cookie expires after 24 hours
+
+2. **Search Engine Blocking**
+   - robots.txt with `Disallow: /` to prevent indexing
+   - X-Robots-Tag headers to prevent indexing
+   - Referrer-Policy set to no-referrer
+
+3. **Security Headers**
+   - X-Frame-Options: DENY to prevent embedding
+   - X-Content-Type-Options: nosniff for security
+   - Custom _headers file for all pages
 
 ## Contact Information
 

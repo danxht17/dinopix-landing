@@ -5,7 +5,14 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[context.staging]
+  command = "cp public/robots.staging.txt public/robots.txt && npm run build"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[edge_functions]]
+  path = "/*"
+  function = "staging-auth"
