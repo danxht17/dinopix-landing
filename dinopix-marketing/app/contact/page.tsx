@@ -8,7 +8,11 @@ import SEO from '@/components/SEO';
 // Declare grecaptcha global
 declare global {
   interface Window {
-    grecaptcha: any;
+    grecaptcha: {
+      getResponse: () => string;
+      reset: () => void;
+      render: (element: string | HTMLElement, options: Record<string, unknown>) => void;
+    };
   }
 }
 
