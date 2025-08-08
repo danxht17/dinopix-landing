@@ -89,7 +89,6 @@ export default function Home() {
           </div>
           <div className="hidden md:flex items-center space-x-6">
             <a href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
-            <a href="/app" className="text-gray-600 hover:text-gray-900 transition-colors">App</a>
             <button 
               onClick={scrollToHero}
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
