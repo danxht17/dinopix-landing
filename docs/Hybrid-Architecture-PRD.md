@@ -274,3 +274,4 @@ Marketing Site → Sign Up → App Dashboard
 **Last Updated**: January 2025  
 **Status**: Implementation Ready  
 **Next Review**: After Phase 2 completion
+**Contact**: support@dinopix.com.au

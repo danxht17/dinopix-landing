@@ -43,18 +43,18 @@ npm run dev
 
 | **URL** | **Technology** | **Purpose** |
 |---------|----------------|-------------|
-| `dinopix.me/` | Next.js SSR | Landing page |
-| `dinopix.me/blog/` | Next.js SSR | Blog posts |
-| `dinopix.me/contact/` | Next.js SSR | Contact form |
-| `dinopix.me/terms/` | Next.js SSR | Legal pages |
-| `dinopix.me/app/` | Vite SPA | AI design app |
+| `dinopix.ai/` | Next.js SSR | Landing page |
+| `dinopix.ai/blog/` | Next.js SSR | Blog posts |
+| `dinopix.ai/contact/` | Next.js SSR | Contact form |
+| `dinopix.ai/terms/` | Next.js SSR | Legal pages |
+| `dinopix.ai/app/` | Vite SPA | AI design app |
 
 ## 🔄 Proxy Routing
 
 The Next.js marketing site automatically proxies `/app/*` requests to the Vite application:
 
 - **Development**: `localhost:3000/app/` → `localhost:5173/`
-- **Production**: `dinopix.me/app/` → `app.dinopix.me/`
+- **Production**: `dinopix.ai/app/` → `app.dinopix.ai/`
 
 ## 📊 SEO Benefits
 
@@ -81,7 +81,7 @@ The Next.js marketing site automatically proxies `/app/*` requests to the Vite a
 
 ### Marketing Site
 - **Platform**: Vercel/Netlify
-- **Domain**: `dinopix.me`
+- **Domain**: `dinopix.ai`
 - **Features**: SSR, ISR for blog posts
 
 ### Application  
