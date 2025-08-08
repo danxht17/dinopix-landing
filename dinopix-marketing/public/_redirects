@@ -1,0 +1,7 @@
+# Netlify redirects file for dinopix-marketing
+
+# Proxy all /app/* requests to the app subdomain
+/app/*  https://dinopix-app.netlify.app/:splat  200
+
+# Handle 404 errors
+/*  /index.html  200
