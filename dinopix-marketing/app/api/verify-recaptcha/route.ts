@@ -5,7 +5,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { token, expectedAction } = body;
 
+    console.log('=== reCAPTCHA Enterprise API Route Debug ===');
+    console.log('Token received:', token ? `${token.substring(0, 20)}...` : 'MISSING');
+    console.log('Expected action:', expectedAction);
+    console.log('Environment check:');
+    console.log('- RECAPTCHA_SECRET_KEY available:', !!process.env.RECAPTCHA_SECRET_KEY);
+    console.log('- GOOGLE_CLOUD_PROJECT_ID available:', !!process.env.GOOGLE_CLOUD_PROJECT_ID);
+    console.log('- NEXT_PUBLIC_RECAPTCHA_SITE_KEY available:', !!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
+    
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      console.log('- API Key format check:', process.env.RECAPTCHA_SECRET_KEY.startsWith('AIza') ? 'Valid format' : 'Invalid format');
+    }
+    if (process.env.GOOGLE_CLOUD_PROJECT_ID) {
+      console.log('- Project ID:', process.env.GOOGLE_CLOUD_PROJECT_ID);
+    }
+
     if (!token) {
+      console.error('ERROR: No reCAPTCHA token provided');
       return NextResponse.json(
         { error: 'reCAPTCHA token is required' },
         { status: 400 }
@@ -14,12 +30,12 @@ export async function POST(request: NextRequest) {
 
     // Check if reCAPTCHA Enterprise is fully configured
     if (!process.env.RECAPTCHA_SECRET_KEY || !process.env.GOOGLE_CLOUD_PROJECT_ID) {
-      console.warn('reCAPTCHA Enterprise not fully configured (missing API key or project ID)');
+      console.warn('reCAPTCHA Enterprise not fully configured - using fallback');
       // Allow submission with basic validation - token presence indicates client-side verification passed
       return NextResponse.json({ 
         success: true, 
         score: 0.7, // Assume reasonable score for fallback
-        message: 'Basic validation passed' 
+        message: 'Basic validation passed (configuration incomplete)' 
       });
     }
 
@@ -32,23 +48,31 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    const recaptchaResponse = await fetch(
-      `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_SECRET_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      }
-    );
+    console.log('Sending request to Google reCAPTCHA Enterprise API...');
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
+    const apiUrl = `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_SECRET_KEY}`;
+    console.log('API URL (without key):', apiUrl.split('?key=')[0] + '?key=***');
+
+    const recaptchaResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    console.log('Google API Response status:', recaptchaResponse.status);
+    console.log('Google API Response headers:', Object.fromEntries(recaptchaResponse.headers.entries()));
     
     const recaptchaResult = await recaptchaResponse.json();
+    console.log('Google API Response body:', JSON.stringify(recaptchaResult, null, 2));
     
     if (!recaptchaResponse.ok) {
-      console.error('reCAPTCHA Enterprise API error:', recaptchaResult);
+      console.error('reCAPTCHA Enterprise API error - Status:', recaptchaResponse.status);
+      console.error('reCAPTCHA Enterprise API error - Body:', recaptchaResult);
       return NextResponse.json(
-        { error: 'Security verification failed' },
+        { error: `Security verification failed: ${recaptchaResult.error?.message || 'Unknown error'}` },
         { status: 400 }
       );
     }
@@ -81,9 +105,12 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('reCAPTCHA Enterprise verification error:', error);
+    console.error('=== reCAPTCHA Enterprise API Route Error ===');
+    console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Security verification failed' },
+      { error: `Security verification failed: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }
