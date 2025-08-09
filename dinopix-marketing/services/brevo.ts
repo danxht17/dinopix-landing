@@ -117,7 +117,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
       throw new Error('Submission rejected. Please try again.');
     }
 
-    // reCAPTCHA Enterprise validation
+    // reCAPTCHA Enterprise validation via API route
     if (!isDevelopment) {
       // In production, require reCAPTCHA token from client
       if (!data.recaptchaToken) {
@@ -125,61 +125,31 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
         throw new Error('Please complete the security verification to submit your message.');
       }
 
-      // Verify reCAPTCHA Enterprise token with Google if secret key and project ID are available
-      if (process.env.RECAPTCHA_SECRET_KEY && process.env.GOOGLE_CLOUD_PROJECT_ID) {
-        try {
-          const requestBody = {
-            event: {
-              token: data.recaptchaToken,
-              expectedAction: 'submit_contact_form',
-              siteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LcCP58rAAAAAGI2ZhaqRRM8QFcWQbtNcqHQ0ngc'
-            }
-          };
+      // Verify reCAPTCHA Enterprise token via server-side API route
+      try {
+        const verificationResponse = await fetch('/api/verify-recaptcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: data.recaptchaToken,
+            expectedAction: 'submit_contact_form'
+          })
+        });
 
-          const recaptchaResponse = await fetch(
-            `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_SECRET_KEY}`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(requestBody)
-            }
-          );
-          
-          const recaptchaResult = await recaptchaResponse.json();
-          
-          if (!recaptchaResponse.ok) {
-            console.warn('reCAPTCHA Enterprise API error:', recaptchaResult);
-            throw new Error('Security verification failed. Please try again.');
-          }
+        const verificationResult = await verificationResponse.json();
 
-          // Check the risk analysis
-          const riskAnalysis = recaptchaResult.riskAnalysis;
-          if (!riskAnalysis || riskAnalysis.score < 0.5) {
-            console.warn('reCAPTCHA Enterprise risk score too low:', riskAnalysis?.score);
-            throw new Error('Security verification failed. Please try again.');
-          }
-
-          // Verify the action matches
-          if (recaptchaResult.tokenProperties?.action !== 'submit_contact_form') {
-            console.warn('reCAPTCHA Enterprise action mismatch:', recaptchaResult.tokenProperties?.action);
-            throw new Error('Security verification failed. Please try again.');
-          }
-
-          console.log('reCAPTCHA Enterprise verification successful. Score:', riskAnalysis.score);
-          
-        } catch (error) {
-          console.error('reCAPTCHA Enterprise verification error:', error);
+        if (!verificationResponse.ok) {
+          console.warn('reCAPTCHA Enterprise verification failed:', verificationResult.error);
           throw new Error('Security verification failed. Please try again.');
         }
-      } else {
-        console.warn('reCAPTCHA Enterprise not fully configured (missing secret key or project ID)');
-        // Allow submission with basic validation
-        if (!data.recaptchaToken) {
-          throw new Error('Security verification is temporarily unavailable. Please try again later.');
-        }
-        console.log('Proceeding with basic token validation');
+
+        console.log('reCAPTCHA Enterprise verification successful:', verificationResult.message, 'Score:', verificationResult.score);
+
+      } catch (error) {
+        console.error('reCAPTCHA Enterprise verification error:', error);
+        throw new Error('Security verification failed. Please try again.');
       }
     }
     // Log the environment for debugging (development only)
