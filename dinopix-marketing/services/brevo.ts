@@ -132,7 +132,7 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
             event: {
               token: data.recaptchaToken,
               expectedAction: 'submit_contact_form',
-              siteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeFt54rAAAAAK0yA8SgPee5iHt6ddAB_ffhH0b5'
+              siteKey: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LcCP58rAAAAAGI2ZhaqRRM8QFcWQbtNcqHQ0ngc'
             }
           };
 

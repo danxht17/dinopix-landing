@@ -42,20 +42,39 @@ export default function Contact() {
     }
 
     // Check if script already exists
-    const existingScript = document.querySelector('script[src="https://www.google.com/recaptcha/enterprise.js"]');
+    const scriptSrc = `https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`;
+    const existingScript = document.querySelector(`script[src^="https://www.google.com/recaptcha/enterprise.js"]`);
     if (existingScript) {
-      setRecaptchaLoaded(true);
+      // Wait for grecaptcha to be ready
+      if (window.grecaptcha && window.grecaptcha.enterprise) {
+        setRecaptchaLoaded(true);
+      } else {
+        // Poll for grecaptcha availability
+        const checkReady = setInterval(() => {
+          if (window.grecaptcha && window.grecaptcha.enterprise) {
+            setRecaptchaLoaded(true);
+            clearInterval(checkReady);
+          }
+        }, 100);
+        setTimeout(() => clearInterval(checkReady), 5000); // Timeout after 5 seconds
+      }
       return;
     }
 
-    // Load reCAPTCHA Enterprise script
+    // Load reCAPTCHA Enterprise script with render parameter
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/enterprise.js';
+    script.src = scriptSrc;
     script.async = true;
     script.defer = true;
     script.onload = () => {
       console.log('reCAPTCHA Enterprise script loaded');
-      setRecaptchaLoaded(true);
+      // Wait for grecaptcha.enterprise.ready
+      if (window.grecaptcha && window.grecaptcha.enterprise) {
+        window.grecaptcha.enterprise.ready(() => {
+          console.log('reCAPTCHA Enterprise ready');
+          setRecaptchaLoaded(true);
+        });
+      }
     };
     script.onerror = () => {
       console.error('Failed to load reCAPTCHA Enterprise script');
@@ -64,7 +83,7 @@ export default function Contact() {
 
     return () => {
       // Cleanup script on unmount
-      const scriptToRemove = document.querySelector('script[src="https://www.google.com/recaptcha/enterprise.js"]');
+      const scriptToRemove = document.querySelector(`script[src^="https://www.google.com/recaptcha/enterprise.js"]`);
       if (scriptToRemove) {
         document.head.removeChild(scriptToRemove);
       }
@@ -104,12 +123,21 @@ export default function Contact() {
           throw new Error('Security verification failed to load. Please refresh the page and try again.');
         }
         
-        // Execute reCAPTCHA Enterprise with action
+        // Execute reCAPTCHA Enterprise with action using ready callback
         try {
-          recaptchaToken = await window.grecaptcha.enterprise.execute(
-            process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-            { action: 'submit_contact_form' }
-          );
+          recaptchaToken = await new Promise((resolve, reject) => {
+            window.grecaptcha.enterprise.ready(async () => {
+              try {
+                const token = await window.grecaptcha.enterprise.execute(
+                  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!,
+                  { action: 'submit_contact_form' }
+                );
+                resolve(token);
+              } catch (error) {
+                reject(error);
+              }
+            });
+          });
           console.log('reCAPTCHA Enterprise token generated:', recaptchaToken.substring(0, 20) + '...');
         } catch (error) {
           console.error('reCAPTCHA Enterprise execution failed:', error);

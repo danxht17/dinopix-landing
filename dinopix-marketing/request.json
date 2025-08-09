@@ -1,7 +1,7 @@
 {
   "event": {
-    "token": "03AFcWeA4_example_token_from_grecaptcha_execute",
+    "token": "TOKEN",
     "expectedAction": "submit_contact_form",
-    "siteKey": "6LeFt54rAAAAAK0yA8SgPee5iHt6ddAB_ffhH0b5"
+    "siteKey": "6LcCP58rAAAAAGI2ZhaqRRM8QFcWQbtNcqHQ0ngc"
   }
 }
