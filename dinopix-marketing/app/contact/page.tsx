@@ -67,11 +67,9 @@ export default function Contact() {
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      console.log('reCAPTCHA Enterprise script loaded');
       // Wait for grecaptcha.enterprise.ready
       if (window.grecaptcha && window.grecaptcha.enterprise) {
         window.grecaptcha.enterprise.ready(() => {
-          console.log('reCAPTCHA Enterprise ready');
           setRecaptchaLoaded(true);
         });
       }
@@ -138,7 +136,6 @@ export default function Contact() {
               }
             });
           });
-          console.log('reCAPTCHA Enterprise token generated:', recaptchaToken.substring(0, 20) + '...');
         } catch (error) {
           console.error('reCAPTCHA Enterprise execution failed:', error);
           throw new Error('Security verification failed. Please refresh the page and try again.');
@@ -388,13 +385,6 @@ export default function Contact() {
 
                 {/* reCAPTCHA Enterprise - invisible, no widget needed */}
                 
-                {/* Debug info in development */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500">
-                    reCAPTCHA Enterprise loaded: {recaptchaLoaded.toString()}<br/>
-                    Site key available: {!!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ? 'Yes' : 'No'}
-                  </div>
-                )}
 
                 <button
                   type="submit"

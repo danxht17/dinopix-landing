@@ -145,7 +145,6 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<void>
           throw new Error('Security verification failed. Please try again.');
         }
 
-        console.log('reCAPTCHA Enterprise verification successful:', verificationResult.message, 'Score:', verificationResult.score);
 
       } catch (error) {
         console.error('reCAPTCHA Enterprise verification error:', error);
