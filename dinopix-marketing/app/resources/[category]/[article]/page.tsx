@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 import NewsletterSubscription from '@/components/NewsletterSubscription'
 
 interface ArticlePageProps {
-  params: {
+  params: Promise<{
     category: string
     article: string
-  }
+  }>
 }
 
 interface Article {
@@ -135,23 +135,24 @@ const articles: ArticlesData = {
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  const categoryArticles = articles[params.category]
+  const resolvedParams = await params
+  const categoryData = articles[resolvedParams.category as keyof typeof articles]
   
-  if (!categoryArticles) {
-    return {
-      title: 'Article Not Found | Dinopix Resources',
-    }
-  }
-  
-  const article = categoryArticles[params.article]
-  
-  if (!article) {
+  if (!categoryData) {
     return {
       title: 'Article Not Found | Dinopix Resources',
     }
   }
 
-  const typedArticle = article as Article
+  const articleData = categoryData[resolvedParams.article as keyof typeof categoryData]
+
+  if (!articleData) {
+    return {
+      title: 'Article Not Found | Dinopix Resources',
+    }
+  }
+
+  const typedArticle = articleData as Article
 
   return {
     title: typedArticle.seoTitle,
@@ -208,14 +209,15 @@ export async function generateStaticParams() {
   return params
 }
 
-export default function ArticlePage({ params }: ArticlePageProps) {
-  const categoryArticles = articles[params.category]
+export default async function ArticlePage({ params }: ArticlePageProps) {
+  const resolvedParams = await params
+  const categoryArticles = articles[resolvedParams.category]
   
   if (!categoryArticles) {
     notFound()
   }
   
-  const article = categoryArticles[params.article]
+  const article = categoryArticles[resolvedParams.article]
 
   if (!article) {
     notFound()
@@ -274,8 +276,8 @@ export default function ArticlePage({ params }: ArticlePageProps) {
           <span>/</span>
           <Link href="/resources" className="hover:text-gray-700">Resources</Link>
           <span>/</span>
-          <Link href={`/resources/${params.category}`} className="hover:text-gray-700 capitalize">
-            {params.category.replace('-', ' ')}
+          <Link href={`/resources/${resolvedParams.category}`} className="hover:text-gray-700 capitalize">
+            {resolvedParams.category.replace('-', ' ')}
           </Link>
         </nav>
 
