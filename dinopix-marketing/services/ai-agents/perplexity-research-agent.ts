@@ -218,7 +218,7 @@ export class PerplexityResearchAgent {
     const statisticPattern = /(\d+%|\d+\.\d+%|\d+,?\d*\s+(?:users|companies|businesses|percent|million|billion))/gi
     const statisticMatches = content.match(statisticPattern) || []
     
-    const statistics = statisticMatches.slice(0, 3).map(stat => ({
+    const statistics = statisticMatches.slice(0, 3).map((stat: string) => ({
       statistic: stat,
       source: sources[0]?.title || 'Research Data',
       year: '2025'

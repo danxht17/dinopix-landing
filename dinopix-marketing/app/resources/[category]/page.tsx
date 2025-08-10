@@ -4,9 +4,9 @@ import { notFound } from 'next/navigation'
 import { PaintBrushIcon, BoltIcon } from '@heroicons/react/24/outline'
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     category: string
-  }
+  }>
 }
 
 // Mock data - will be replaced with Notion API integration
@@ -59,7 +59,8 @@ const categories = {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const categoryData = categories[params.category as keyof typeof categories]
+  const resolvedParams = await params
+  const categoryData = categories[resolvedParams.category as keyof typeof categories]
   
   if (!categoryData) {
     return {
@@ -75,10 +76,10 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
       title: categoryData.seoTitle,
       description: categoryData.metaDescription,
       type: 'website',
-      url: `https://dinopix.ai/resources/${params.category}`,
+      url: `https://dinopix.ai/resources/${resolvedParams.category}`,
     },
     alternates: {
-      canonical: `https://dinopix.ai/resources/${params.category}`,
+      canonical: `https://dinopix.ai/resources/${resolvedParams.category}`,
     },
   }
 }
@@ -89,8 +90,9 @@ export async function generateStaticParams() {
   }))
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const categoryData = categories[params.category as keyof typeof categories]
+export default async function CategoryPage({ params }: CategoryPageProps) {
+  const resolvedParams = await params
+  const categoryData = categories[resolvedParams.category as keyof typeof categories]
 
   if (!categoryData) {
     notFound()
@@ -101,14 +103,14 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     '@type': 'CollectionPage',
     name: categoryData.name,
     description: categoryData.description,
-    url: `https://dinopix.ai/resources/${params.category}`,
+    url: `https://dinopix.ai/resources/${resolvedParams.category}`,
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: categoryData.articles.map((article, index) => ({
         '@type': 'Article',
         position: index + 1,
         headline: article.title,
-        url: `https://dinopix.ai/resources/${params.category}/${article.slug}`,
+        url: `https://dinopix.ai/resources/${resolvedParams.category}/${article.slug}`,
         datePublished: article.publishedDate,
         author: {
           '@type': 'Organization',
@@ -179,7 +181,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   
                   <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
                     <Link
-                      href={`/resources/${params.category}/${article.slug}`}
+                      href={`/resources/${resolvedParams.category}/${article.slug}`}
                       className="hover:text-blue-600 transition-colors"
                     >
                       {article.title}
@@ -192,7 +194,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   
                   <div className="flex items-center justify-between">
                     <Link
-                      href={`/resources/${params.category}/${article.slug}`}
+                      href={`/resources/${resolvedParams.category}/${article.slug}`}
                       className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                     >
                       Read article →
@@ -214,7 +216,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(categories)
-              .filter(([slug]) => slug !== params.category)
+              .filter(([slug]) => slug !== resolvedParams.category)
               .map(([slug, category]) => (
                 <Link
                   key={slug}

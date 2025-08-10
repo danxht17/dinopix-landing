@@ -173,9 +173,9 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       }],
       publishedTime: typedArticle.publishedDate,
       modifiedTime: typedArticle.updatedDate,
-      section: params.category,
+      section: resolvedParams.category,
       authors: [typedArticle.author],
-      url: `https://dinopix.ai/resources/${params.category}/${params.article}`,
+      url: `https://dinopix.ai/resources/${resolvedParams.category}/${resolvedParams.article}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -184,7 +184,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       images: [typedArticle.featuredImage],
     },
     alternates: {
-      canonical: `https://dinopix.ai/resources/${params.category}/${params.article}`,
+      canonical: `https://dinopix.ai/resources/${resolvedParams.category}/${resolvedParams.article}`,
     },
     robots: {
       index: true,
@@ -248,14 +248,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     dateModified: typedArticle.updatedDate,
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://dinopix.ai/resources/${params.category}/${params.article}`,
+      '@id': `https://dinopix.ai/resources/${resolvedParams.category}/${resolvedParams.article}`,
     },
     image: {
       '@type': 'ImageObject',
       url: typedArticle.featuredImage,
       alt: typedArticle.imageAltText,
     },
-    articleSection: params.category,
+    articleSection: resolvedParams.category,
     keywords: typedArticle.secondaryKeywords.join(', '),
     wordCount: typedArticle.wordCount,
     timeRequired: `PT${typedArticle.readingTime}M`,
