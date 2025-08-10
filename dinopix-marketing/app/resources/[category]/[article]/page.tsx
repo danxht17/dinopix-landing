@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import NewsletterSubscription from '@/components/NewsletterSubscription'
 
 interface ArticlePageProps {
   params: {
@@ -9,8 +10,33 @@ interface ArticlePageProps {
   }
 }
 
+interface Article {
+  title: string
+  seoTitle: string
+  metaDescription: string
+  primaryKeyword: string
+  secondaryKeywords: string[]
+  author: string
+  publishedDate: string
+  updatedDate: string
+  featuredImage: string
+  imageAltText: string
+  excerpt: string
+  content: string
+  wordCount: number
+  readingTime: number
+}
+
+interface ArticleCategory {
+  [key: string]: Article
+}
+
+interface ArticlesData {
+  [key: string]: ArticleCategory
+}
+
 // Mock data - will be replaced with Notion API integration
-const articles = {
+const articles: ArticlesData = {
   'ai-design-tools': {
     'best-ai-logo-generators-2025': {
       title: 'Best AI Logo Generators 2025: Complete Comparison Guide',
@@ -109,8 +135,15 @@ const articles = {
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  const categoryArticles = articles[params.category as keyof typeof articles]
-  const article = categoryArticles?.[params.article as keyof typeof categoryArticles]
+  const categoryArticles = articles[params.category]
+  
+  if (!categoryArticles) {
+    return {
+      title: 'Article Not Found | Dinopix Resources',
+    }
+  }
+  
+  const article = categoryArticles[params.article]
   
   if (!article) {
     return {
@@ -118,34 +151,36 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     }
   }
 
+  const typedArticle = article as Article
+
   return {
-    title: article.seoTitle,
-    description: article.metaDescription,
-    keywords: [article.primaryKeyword, ...article.secondaryKeywords],
-    authors: [{ name: article.author }],
+    title: typedArticle.seoTitle,
+    description: typedArticle.metaDescription,
+    keywords: [typedArticle.primaryKeyword, ...typedArticle.secondaryKeywords],
+    authors: [{ name: typedArticle.author }],
     creator: 'Dinopix',
     publisher: 'Dinopix',
     openGraph: {
       type: 'article',
-      title: article.seoTitle,
-      description: article.metaDescription,
+      title: typedArticle.seoTitle,
+      description: typedArticle.metaDescription,
       images: [{
-        url: article.featuredImage,
+        url: typedArticle.featuredImage,
         width: 1200,
         height: 630,
-        alt: article.imageAltText,
+        alt: typedArticle.imageAltText,
       }],
-      publishedTime: article.publishedDate,
-      modifiedTime: article.updatedDate,
+      publishedTime: typedArticle.publishedDate,
+      modifiedTime: typedArticle.updatedDate,
       section: params.category,
-      authors: [article.author],
+      authors: [typedArticle.author],
       url: `https://dinopix.ai/resources/${params.category}/${params.article}`,
     },
     twitter: {
       card: 'summary_large_image',
-      title: article.seoTitle,
-      description: article.metaDescription,
-      images: [article.featuredImage],
+      title: typedArticle.seoTitle,
+      description: typedArticle.metaDescription,
+      images: [typedArticle.featuredImage],
     },
     alternates: {
       canonical: `https://dinopix.ai/resources/${params.category}/${params.article}`,
@@ -174,18 +209,26 @@ export async function generateStaticParams() {
 }
 
 export default function ArticlePage({ params }: ArticlePageProps) {
-  const categoryArticles = articles[params.category as keyof typeof articles]
-  const article = categoryArticles?.[params.article as keyof typeof categoryArticles]
+  const categoryArticles = articles[params.category]
+  
+  if (!categoryArticles) {
+    notFound()
+  }
+  
+  const article = categoryArticles[params.article]
 
   if (!article) {
     notFound()
   }
 
+  // Type assertion to help TypeScript understand article is not null after the check
+  const typedArticle = article as Article
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: article.title,
-    description: article.metaDescription,
+    headline: typedArticle.title,
+    description: typedArticle.metaDescription,
     author: {
       '@type': 'Organization',
       name: 'Dinopix',
@@ -199,21 +242,21 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         url: 'https://dinopix.ai/logo.png',
       },
     },
-    datePublished: article.publishedDate,
-    dateModified: article.updatedDate,
+    datePublished: typedArticle.publishedDate,
+    dateModified: typedArticle.updatedDate,
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': `https://dinopix.ai/resources/${params.category}/${params.article}`,
     },
     image: {
       '@type': 'ImageObject',
-      url: article.featuredImage,
-      alt: article.imageAltText,
+      url: typedArticle.featuredImage,
+      alt: typedArticle.imageAltText,
     },
     articleSection: params.category,
-    keywords: article.secondaryKeywords.join(', '),
-    wordCount: article.wordCount,
-    timeRequired: `PT${article.readingTime}M`,
+    keywords: typedArticle.secondaryKeywords.join(', '),
+    wordCount: typedArticle.wordCount,
+    timeRequired: `PT${typedArticle.readingTime}M`,
   }
 
   return (
@@ -223,9 +266,10 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      <article className="max-w-4xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <article className="max-w-4xl mx-auto">
         {/* Breadcrumbs */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-gray-700">Home</Link>
           <span>/</span>
           <Link href="/resources" className="hover:text-gray-700">Resources</Link>
@@ -233,34 +277,30 @@ export default function ArticlePage({ params }: ArticlePageProps) {
           <Link href={`/resources/${params.category}`} className="hover:text-gray-700 capitalize">
             {params.category.replace('-', ' ')}
           </Link>
-          <span>/</span>
-          <span className="text-gray-900">{article.title}</span>
         </nav>
 
         {/* Article Header */}
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
-            {article.title}
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+            {typedArticle.title}
           </h1>
           
-          <div className="flex items-center space-x-4 text-sm text-gray-500 mb-6">
-            <span>By {article.author}</span>
-            <span>•</span>
-            <time dateTime={article.publishedDate}>
-              {new Date(article.publishedDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
+            <span>By {typedArticle.author}</span>
+            <span className="hidden sm:inline">•</span>
+            <time dateTime={typedArticle.publishedDate}>
+              {new Date(typedArticle.publishedDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
               })}
             </time>
-            <span>•</span>
-            <span>{article.readingTime} min read</span>
-            <span>•</span>
-            <span>{article.wordCount} words</span>
+            <span className="hidden sm:inline">•</span>
+            <span>{typedArticle.readingTime} min read</span>
           </div>
 
-          <p className="text-xl text-gray-600 leading-relaxed">
-            {article.excerpt}
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+            {typedArticle.excerpt}
           </p>
         </header>
 
@@ -268,15 +308,15 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         <div className="mb-8">
           <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
             <div className="w-full h-full flex items-center justify-center text-gray-400">
-              Featured Image: {article.imageAltText}
+              Featured Image: {typedArticle.imageAltText}
             </div>
           </div>
         </div>
 
         {/* Article Content */}
         <div 
-          className="prose prose-lg max-w-none mb-12"
-          dangerouslySetInnerHTML={{ __html: article.content }} 
+          className="mb-12 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:text-gray-900 [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:leading-tight [&_h2:first-child]:mt-0 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:leading-tight [&_p]:text-lg [&_p]:leading-relaxed [&_p]:text-gray-700 [&_p]:mb-6 [&_p:last-child]:mb-0"
+          dangerouslySetInnerHTML={{ __html: typedArticle.content }} 
         />
 
         {/* Article Footer */}
@@ -286,9 +326,9 @@ export default function ArticlePage({ params }: ArticlePageProps) {
             <h3 className="text-sm font-medium text-gray-900 mb-3">Tags:</h3>
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {article.primaryKeyword}
+                {typedArticle.primaryKeyword}
               </span>
-              {article.secondaryKeywords.map((keyword) => (
+              {typedArticle.secondaryKeywords.map((keyword: string) => (
                 <span key={keyword} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
                   {keyword}
                 </span>
@@ -296,23 +336,19 @@ export default function ArticlePage({ params }: ArticlePageProps) {
             </div>
           </div>
 
-          {/* Early Access CTA */}
-          <div className="bg-blue-50 rounded-lg p-6 text-center">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Ready to Transform Your Design Workflow?
+          {/* Newsletter Subscription CTA */}
+          <div className="bg-blue-50 rounded-lg p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
+              Stay Updated with AI Design Insights
             </h3>
-            <p className="text-gray-600 mb-4">
-              Join thousands of designers using AI to create professional designs in minutes.
+            <p className="text-gray-600 mb-4 text-center">
+              Get the latest AI design tools, tutorials, and industry insights delivered to your inbox weekly.
             </p>
-            <Link
-              href="/app"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            >
-              Get Early Access to Dinopix
-            </Link>
+            <NewsletterSubscription />
           </div>
         </footer>
-      </article>
+        </article>
+      </main>
     </>
   )
 }

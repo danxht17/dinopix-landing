@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { RocketLaunchIcon, BoltIcon, CpuChipIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
 import { addToEarlyAccessList } from '@/services/brevo';
 import SEO from '@/components/SEO';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -80,24 +82,7 @@ export default function Home() {
         url="https://dinopix.ai/"
         structuredData={structuredData}
       />
-      {/* Header */}
-      <header className="px-6 py-4">
-        <nav className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg"></div>
-            <span className="text-xl font-bold text-gray-900">Dinopix</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
-            <button 
-              onClick={scrollToHero}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Join Waitlist
-            </button>
-          </div>
-        </nav>
-      </header>
+      <Navigation onJoinWaitlistClick={scrollToHero} />
 
       {/* Hero Section */}
       <section id="hero-section" className="px-6 py-20 hero-animated-bg">
@@ -382,26 +367,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-6 py-12 bg-gray-900">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-blue-500 rounded"></div>
-            <span className="text-xl font-bold text-white">Dinopix</span>
-          </div>
-          <p className="text-gray-400 mb-6">
-            AI-powered design platform launching Q2 2025
-          </p>
-          <div className="flex justify-center space-x-6 mb-4">
-            <a href="/terms" className="text-gray-400 hover:text-white transition-colors">Terms & Conditions</a>
-            <a href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</a>
-          </div>
-          <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Dinopix Pty Ltd. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

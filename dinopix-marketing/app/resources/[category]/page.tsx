@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PaintBrushIcon, BoltIcon } from '@heroicons/react/24/outline'
 
 interface CategoryPageProps {
   params: {
@@ -15,7 +16,7 @@ const categories = {
     description: 'Comprehensive reviews and comparisons of the best AI design tools available today. Find the perfect tool for your design workflow.',
     seoTitle: 'Best AI Design Tools 2025 | Reviews & Comparisons | Dinopix',
     metaDescription: 'Discover the top AI design tools with detailed reviews, feature comparisons, and pricing analysis. Find the perfect AI tool for your design needs.',
-    icon: '🎨',
+    icon: PaintBrushIcon,
     articles: [
       {
         id: 1,
@@ -42,7 +43,7 @@ const categories = {
     description: 'Learn how to automate your design workflow and boost productivity with AI-powered tools and techniques.',
     seoTitle: 'Design Automation Guide | AI Workflow Tips | Dinopix',
     metaDescription: 'Master design automation with AI tools. Learn practical strategies to streamline your workflow and boost productivity.',
-    icon: '⚡',
+    icon: BoltIcon,
     articles: [
       {
         id: 3,
@@ -135,8 +136,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         </nav>
 
         {/* Category Header */}
-        <header className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <div className="text-4xl mb-4">{categoryData.icon}</div>
+        <header className="text-center py-8 md:py-12 px-5 bg-white rounded-lg border border-gray-200">
+          <div className="flex justify-center mb-4">
+            <categoryData.icon className="w-12 h-12 text-blue-500" />
+          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             {categoryData.name}
           </h1>
@@ -219,7 +222,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                   className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center mb-2">
-                    <span className="text-xl mr-2">{category.icon}</span>
+                    <category.icon className="w-5 h-5 mr-2 text-gray-600" />
                     <h4 className="font-semibold text-gray-900">{category.name}</h4>
                   </div>
                   <p className="text-sm text-gray-600">

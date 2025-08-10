@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { PaintBrushIcon, BoltIcon, AcademicCapIcon, LightBulbIcon } from '@heroicons/react/24/outline'
 
 export const metadata: Metadata = {
   title: 'AI Design Resources Hub | Tools, Guides & Tutorials | Dinopix',
@@ -21,8 +22,8 @@ const featuredCategories = [
     slug: 'ai-design-tools',
     description: 'Reviews and comparisons of the best AI design tools available today.',
     articleCount: 12,
-    icon: '🎨',
-    color: 'bg-blue-100 text-blue-800',
+    icon: PaintBrushIcon,
+    color: 'bg-blue-100 text-blue-500',
   },
   {
     id: 2,
@@ -30,8 +31,8 @@ const featuredCategories = [
     slug: 'design-automation',
     description: 'Learn how to automate your design workflow and boost productivity.',
     articleCount: 8,
-    icon: '⚡',
-    color: 'bg-green-100 text-green-800',
+    icon: BoltIcon,
+    color: 'bg-green-100 text-green-400',
   },
   {
     id: 3,
@@ -39,8 +40,8 @@ const featuredCategories = [
     slug: 'tutorials',
     description: 'Step-by-step tutorials for mastering AI design techniques.',
     articleCount: 15,
-    icon: '📚',
-    color: 'bg-purple-100 text-purple-800',
+    icon: AcademicCapIcon,
+    color: 'bg-blue-100 text-blue-600',
   },
   {
     id: 4,
@@ -48,8 +49,8 @@ const featuredCategories = [
     slug: 'industry-insights',
     description: 'Latest trends and insights in the AI design industry.',
     articleCount: 6,
-    icon: '💡',
-    color: 'bg-yellow-100 text-yellow-800',
+    icon: LightBulbIcon,
+    color: 'bg-green-100 text-green-500',
   },
 ]
 
@@ -94,11 +95,32 @@ const featuredArticles = [
 
 export default function ResourcesPage() {
   return (
-    <div className="space-y-12">
+    <>
+      {/* Resources Header */}
+      <header className="bg-white border-b border-gray-200 -mx-4 sm:-mx-6 lg:-mx-8 mb-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-8">
+            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+              <Link href="/" className="hover:text-gray-700">Home</Link>
+              <span>/</span>
+              <span className="text-gray-900">Resources</span>
+            </nav>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              AI Design Resources
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl">
+              Discover the latest insights, tools, and techniques in AI-powered design. 
+              From beginner guides to advanced tutorials, everything you need to master design automation.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="space-y-12">
       {/* Featured Categories Grid */}
       <section>
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Browse by Category</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {featuredCategories.map((category) => (
             <Link
               key={category.id}
@@ -106,7 +128,7 @@ export default function ResourcesPage() {
               className="group block p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all"
             >
               <div className="flex items-center mb-4">
-                <span className="text-2xl mr-3">{category.icon}</span>
+                <category.icon className="w-6 h-6 mr-3 text-gray-600" />
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${category.color}`}>
                   {category.articleCount} articles
                 </span>
@@ -134,7 +156,7 @@ export default function ResourcesPage() {
           </Link>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {featuredArticles.map((article) => (
             <article key={article.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="aspect-video bg-gray-200">
@@ -206,6 +228,7 @@ export default function ResourcesPage() {
           </button>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   )
 }
