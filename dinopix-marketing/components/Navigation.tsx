@@ -84,7 +84,15 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsResourcesOpen(false)
-    }, 300) // Increased timeout for better UX
+    }, 150) // Reduced timeout to prevent click interference
+  }
+
+  // Handle click on mega menu items to ensure they work properly
+  const handleMenuItemClick = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+    setIsResourcesOpen(false)
   }
 
   // Close dropdown when clicking outside
@@ -167,14 +175,14 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
       {/* Mega Menu Dropdown - Desktop Only */}
       {isResourcesOpen && (
         <div 
-          className="hidden lg:block absolute top-full left-0 right-0 mt-2 z-50"
+          className="hidden md:block absolute top-full left-0 right-0 mt-2 z-[9999] pointer-events-auto"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-xl">
-                <div className="p-8">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-xl pointer-events-auto">
+                <div className="p-6 md:p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                     {resourcesData.categories.map((category) => {
                       const IconComponent = category.icon
                       return (
@@ -183,7 +191,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                           <Link
                             href={`/resources/${category.slug}`}
                             className="group block pb-3 border-b border-gray-100"
-                            onClick={() => setIsResourcesOpen(false)}
+                            onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center space-x-3 mb-2">
                               <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-blue-50 transition-colors">
@@ -208,7 +216,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                                 key={index}
                                 href={`/resources/${category.slug}/${article.slug}`}
                                 className="group flex items-start space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors"
-                                onClick={() => setIsResourcesOpen(false)}
+                                onClick={handleMenuItemClick}
                               >
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
                                 <div>
@@ -232,7 +240,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                     <Link
                       href="/resources"
                       className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white font-medium rounded-lg hover:from-green-500 hover:to-blue-600 transition-all"
-                      onClick={() => setIsResourcesOpen(false)}
+                      onClick={handleMenuItemClick}
                     >
                       View All Resources
                       <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
