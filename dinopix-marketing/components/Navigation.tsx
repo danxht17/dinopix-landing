@@ -84,18 +84,10 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsResourcesOpen(false)
-    }, 150) // Reduced timeout to prevent click interference
+    }, 300) // Longer timeout to allow clicking on menu items
   }
 
-  // Handle click on mega menu items to ensure they work properly
-  const handleMenuItemClick = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    setIsResourcesOpen(false)
-  }
-
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or on links
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -103,9 +95,23 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
       }
     }
 
+    const handleClick = (event: MouseEvent) => {
+      // Close menu when clicking on any link inside the mega menu
+      const target = event.target as HTMLElement
+      if (target.closest('a') && dropdownRef.current?.contains(target)) {
+        // Small delay to allow navigation to start
+        setTimeout(() => {
+          setIsResourcesOpen(false)
+        }, 50)
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('click', handleClick)
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('click', handleClick)
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
@@ -191,7 +197,6 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                           <Link
                             href={`/resources/${category.slug}`}
                             className="group block pb-3 border-b border-gray-100"
-                            onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center space-x-3 mb-2">
                               <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-blue-50 transition-colors">
@@ -216,8 +221,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                                 key={index}
                                 href={`/resources/${category.slug}/${article.slug}`}
                                 className="group flex items-start space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors"
-                                onClick={handleMenuItemClick}
-                              >
+                                  >
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
                                 <div>
                                   <p className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors line-clamp-2">
@@ -240,7 +244,6 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                     <Link
                       href="/resources"
                       className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white font-medium rounded-lg hover:from-green-500 hover:to-blue-600 transition-all"
-                      onClick={handleMenuItemClick}
                     >
                       View All Resources
                       <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
