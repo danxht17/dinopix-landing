@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     let body
     try {
       body = await request.json()
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { success: false, message: 'Invalid JSON payload' },
         { status: 400 }
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Simulate newsletter service integration
-async function simulateNewsletterSubscription(email: string, source: string) {
+async function simulateNewsletterSubscription(email: string, _source: string) {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500))
   

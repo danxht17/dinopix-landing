@@ -1,7 +1,7 @@
 'use client'
 
 export default function ResourcesError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string }

@@ -99,7 +99,7 @@ export default function ResourcesAdminPage() {
             </div>
             <div className="flex items-start">
               <span className="font-semibold mr-2">5.</span>
-              <span>Click "Process Queue" to start AI content generation</span>
+              <span>Click &ldquo;Process Queue&rdquo; to start AI content generation</span>
             </div>
           </div>
         </div>
