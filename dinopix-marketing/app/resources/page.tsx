@@ -118,7 +118,7 @@ export default function ResourcesPage() {
 
       <div className="space-y-12">
       {/* Featured Categories Grid */}
-      <section>
+      <section id="categories">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Browse by Category</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {featuredCategories.map((category) => (
@@ -148,12 +148,12 @@ export default function ResourcesPage() {
       <section>
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Latest Articles</h2>
-          <Link
-            href="/resources/all"
+          <a
+            href="#categories"
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
-            View all articles →
-          </Link>
+            View all categories →
+          </a>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronDownIcon, PaintBrushIcon, BoltIcon, AcademicCapIcon, LightBulbIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 
@@ -70,53 +70,28 @@ interface NavigationProps {
 export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClick }: NavigationProps) {
   const [isResourcesOpen, setIsResourcesOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Handle mouse enter/leave for desktop mega menu
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    setIsResourcesOpen(true)
+  // Simple click-based toggle - no mouse events
+  const toggleResources = () => {
+    setIsResourcesOpen(!isResourcesOpen)
   }
 
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setIsResourcesOpen(false)
-    }, 300) // Longer timeout to allow clicking on menu items
-  }
-
-  // Close dropdown when clicking outside or on links
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement
+      // Only close if clicking completely outside the navigation area
+      if (!target.closest('nav') && !target.closest('[data-mega-menu]')) {
         setIsResourcesOpen(false)
       }
     }
 
-    const handleClick = (event: MouseEvent) => {
-      // Close menu when clicking on any link inside the mega menu
-      const target = event.target as HTMLElement
-      if (target.closest('a') && dropdownRef.current?.contains(target)) {
-        // Small delay to allow navigation to start
-        setTimeout(() => {
-          setIsResourcesOpen(false)
-        }, 50)
-      }
-    }
-
     document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('click', handleClick)
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('click', handleClick)
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
     }
-  }, [])  // Empty dependency array is correct here
+  }, [])
 
   return (
     <header className="px-4 sm:px-6 py-6 md:py-8 bg-white border-b border-gray-100 relative">
@@ -132,7 +107,6 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
           {/* Resources Mega Menu */}
           <div 
             className="relative"
-            ref={dropdownRef}
           >
             <button
               className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-all ${
@@ -140,8 +114,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                   ? 'bg-blue-50 text-blue-600' 
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
               }`}
-              onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-              onMouseEnter={handleMouseEnter}
+              onClick={toggleResources}
               aria-expanded={isResourcesOpen}
               aria-haspopup="true"
             >
@@ -181,12 +154,11 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
       {/* Mega Menu Dropdown - Desktop Only */}
       {isResourcesOpen && (
         <div 
-          className="hidden md:block absolute top-full left-0 right-0 mt-2 z-[9999] pointer-events-auto"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+          className="hidden md:block absolute top-full left-0 right-0 mt-2 z-[9999]"
+          data-mega-menu="true"
         >
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-xl pointer-events-auto">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-xl">
                 <div className="p-6 md:p-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                     {resourcesData.categories.map((category) => {
@@ -197,6 +169,10 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                           <Link
                             href={`/resources/${category.slug}`}
                             className="group block pb-3 border-b border-gray-100"
+                            onClick={(e) => {
+                              console.log('Category link clicked:', category.slug, e)
+                              setIsResourcesOpen(false)
+                            }}
                           >
                             <div className="flex items-center space-x-3 mb-2">
                               <div className="p-2 rounded-lg bg-gray-50 group-hover:bg-blue-50 transition-colors">
@@ -221,6 +197,10 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                                 key={index}
                                 href={`/resources/${category.slug}/${article.slug}`}
                                 className="group flex items-start space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors"
+                                onClick={(e) => {
+                                  console.log('Article link clicked:', article.slug, e)
+                                  setIsResourcesOpen(false)
+                                }}
                                   >
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
                                 <div>
@@ -244,6 +224,7 @@ export default function Navigation({ showJoinWaitlist = true, onJoinWaitlistClic
                     <Link
                       href="/resources"
                       className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white font-medium rounded-lg hover:from-green-500 hover:to-blue-600 transition-all"
+                      onClick={() => setIsResourcesOpen(false)}
                     >
                       View All Resources
                       <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

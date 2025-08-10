@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { PaintBrushIcon, BoltIcon } from '@heroicons/react/24/outline'
+import { PaintBrushIcon, BoltIcon, AcademicCapIcon, LightBulbIcon } from '@heroicons/react/24/outline'
 
 interface CategoryPageProps {
   params: Promise<{
@@ -52,6 +52,78 @@ const categories = {
         excerpt: 'Learn practical strategies to integrate AI tools into your design process and save hours of manual work.',
         readingTime: 12,
         publishedDate: '2025-01-12',
+        author: 'Dinopix Team',
+      },
+    ]
+  },
+  'tutorials': {
+    name: 'Tutorials & Guides',
+    description: 'Step-by-step tutorials for mastering AI design tools and techniques.',
+    seoTitle: 'AI Design Tutorials & Guides | Learn AI Design | Dinopix',
+    metaDescription: 'Master AI design with our comprehensive tutorials and step-by-step guides. Perfect for beginners and professionals.',
+    icon: AcademicCapIcon,
+    articles: [
+      {
+        id: 4,
+        title: 'Getting Started with AI Design: Complete Beginner Guide',
+        slug: 'getting-started-ai-design',
+        excerpt: 'Learn the fundamentals of AI design with this comprehensive beginner-friendly guide covering all essential concepts.',
+        readingTime: 15,
+        publishedDate: '2025-01-08',
+        author: 'Dinopix Team',
+      },
+      {
+        id: 5,
+        title: 'Advanced AI Prompting Techniques for Better Results',
+        slug: 'advanced-ai-prompting',
+        excerpt: 'Master advanced prompting strategies to get better results from AI design tools and improve your creative output.',
+        readingTime: 11,
+        publishedDate: '2025-01-05',
+        author: 'Dinopix Team',
+      },
+      {
+        id: 6,
+        title: 'AI Design Best Practices: Professional Tips & Tricks',
+        slug: 'ai-design-best-practices',
+        excerpt: 'Discover professional best practices for AI design workflows, quality control, and creative optimization.',
+        readingTime: 8,
+        publishedDate: '2025-01-03',
+        author: 'Dinopix Team',
+      },
+    ]
+  },
+  'industry-insights': {
+    name: 'Industry Insights',
+    description: 'Latest trends and insights in AI design and the creative industry.',
+    seoTitle: 'AI Design Industry Insights & Trends 2025 | Dinopix',
+    metaDescription: 'Stay updated with the latest AI design trends, industry insights, and future predictions from design experts.',
+    icon: LightBulbIcon,
+    articles: [
+      {
+        id: 7,
+        title: 'AI Design Trends 2025: What to Expect This Year',
+        slug: 'ai-design-trends-2025',
+        excerpt: 'Explore the top AI design trends shaping the creative industry in 2025 and beyond.',
+        readingTime: 13,
+        publishedDate: '2025-01-01',
+        author: 'Dinopix Team',
+      },
+      {
+        id: 8,
+        title: 'The Future of Design Automation: Industry Predictions',
+        slug: 'future-design-automation',
+        excerpt: 'Expert predictions on how design automation will evolve and impact creative professionals.',
+        readingTime: 14,
+        publishedDate: '2024-12-28',
+        author: 'Dinopix Team',
+      },
+      {
+        id: 9,
+        title: 'AI Impact on Creative Industry: Opportunities & Challenges',
+        slug: 'ai-impact-creative-industry',
+        excerpt: 'Analyzing how AI is transforming the creative industry, creating new opportunities while presenting unique challenges.',
+        readingTime: 16,
+        publishedDate: '2024-12-25',
         author: 'Dinopix Team',
       },
     ]
