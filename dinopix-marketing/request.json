@@ -1,0 +1,7 @@
+{
+  "event": {
+    "token": "TOKEN",
+    "expectedAction": "submit_contact_form",
+    "siteKey": "6LcCP58rAAAAAGI2ZhaqRRM8QFcWQbtNcqHQ0ngc"
+  }
+}

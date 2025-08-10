@@ -1,5 +1,6 @@
 export interface EarlyAccessData {
   email: string;
+  honeypot?: string; // Hidden field for bot detection
 }
 
 export interface ContactFormData {
@@ -7,6 +8,8 @@ export interface ContactFormData {
   email: string;
   subject: string;
   message: string;
+  honeypot?: string; // Hidden field for bot detection
+  recaptchaToken?: string; // reCAPTCHA verification token
 }
 
 // For development/testing, use a mock implementation
@@ -14,10 +17,16 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void> => {
   try {
-    // Log the environment for debugging
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
-    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
+    // Honeypot validation - if filled, likely a bot
+    if (data.honeypot && data.honeypot.trim() !== '') {
+      console.warn('Bot detected in early access signup');
+      throw new Error('Submission rejected. Please try again.');
+    }
+    // Log the environment for debugging (development only)
+    if (isDevelopment) {
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    }
     
     // In development mode without API key, simulate success/failure
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {
@@ -102,10 +111,51 @@ export const addToEarlyAccessList = async (data: EarlyAccessData): Promise<void>
 
 export const sendContactFormEmail = async (data: ContactFormData): Promise<void> => {
   try {
-    // Log the environment for debugging
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
-    console.log('API Key length:', process.env.NEXT_PUBLIC_BREVO_API_KEY ? process.env.NEXT_PUBLIC_BREVO_API_KEY.length : 0);
+    // Honeypot validation - if filled, likely a bot
+    if (data.honeypot && data.honeypot.trim() !== '') {
+      console.warn('Bot detected in contact form submission');
+      throw new Error('Submission rejected. Please try again.');
+    }
+
+    // reCAPTCHA Enterprise validation via API route
+    if (!isDevelopment) {
+      // In production, require reCAPTCHA token from client
+      if (!data.recaptchaToken) {
+        console.warn('reCAPTCHA Enterprise token missing in production');
+        throw new Error('Please complete the security verification to submit your message.');
+      }
+
+      // Verify reCAPTCHA Enterprise token via server-side API route
+      try {
+        const verificationResponse = await fetch('/api/verify-recaptcha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: data.recaptchaToken,
+            expectedAction: 'submit_contact_form'
+          })
+        });
+
+        const verificationResult = await verificationResponse.json();
+
+        if (!verificationResponse.ok) {
+          console.warn('reCAPTCHA Enterprise verification failed:', verificationResult.error);
+          throw new Error('Security verification failed. Please try again.');
+        }
+
+
+      } catch (error) {
+        console.error('reCAPTCHA Enterprise verification error:', error);
+        throw new Error('Security verification failed. Please try again.');
+      }
+    }
+    // Log the environment for debugging (development only)
+    if (isDevelopment) {
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('API Key available:', !!process.env.NEXT_PUBLIC_BREVO_API_KEY);
+    }
     
     // In development mode without API key, simulate success
     if (isDevelopment && !process.env.NEXT_PUBLIC_BREVO_API_KEY) {

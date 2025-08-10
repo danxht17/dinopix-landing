@@ -1,9 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link'
+import SEO from '@/components/SEO'
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import { sendContactFormEmail, addToEarlyAccessList, type ContactFormData } from '@/services/brevo';
-import SEO from '@/components/SEO';
+
+// Declare grecaptcha enterprise global
+declare global {
+  interface Window {
+    grecaptcha: {
+      enterprise: {
+        execute: (siteKey: string, options: { action: string }) => Promise<string>;
+        ready: (callback: () => void) => void;
+      };
+      getResponse: () => string;
+      reset: () => void;
+      render: (element: string | HTMLElement, options: Record<string, unknown>) => void;
+    };
+  }
+}
 
 export default function Contact() {
   const [formData, setFormData] = useState<ContactFormData & { marketingOptIn: boolean }>({
@@ -11,18 +28,78 @@ export default function Contact() {
     email: '',
     subject: '',
     message: '',
-    marketingOptIn: false
+    marketingOptIn: false,
+    honeypot: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+
+  useEffect(() => {
+    // Only load reCAPTCHA if site key is available
+    if (!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+      console.warn('reCAPTCHA site key not found');
+      return;
+    }
+
+    // Check if script already exists
+    const scriptSrc = `https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`;
+    const existingScript = document.querySelector(`script[src^="https://www.google.com/recaptcha/enterprise.js"]`);
+    if (existingScript) {
+      // Wait for grecaptcha to be ready
+      if (window.grecaptcha && window.grecaptcha.enterprise) {
+        setRecaptchaLoaded(true);
+      } else {
+        // Poll for grecaptcha availability
+        const checkReady = setInterval(() => {
+          if (window.grecaptcha && window.grecaptcha.enterprise) {
+            setRecaptchaLoaded(true);
+            clearInterval(checkReady);
+          }
+        }, 100);
+        setTimeout(() => clearInterval(checkReady), 5000); // Timeout after 5 seconds
+      }
+      return;
+    }
+
+    // Load reCAPTCHA Enterprise script with render parameter
+    const script = document.createElement('script');
+    script.src = scriptSrc;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      // Wait for grecaptcha.enterprise.ready
+      if (window.grecaptcha && window.grecaptcha.enterprise) {
+        window.grecaptcha.enterprise.ready(() => {
+          setRecaptchaLoaded(true);
+        });
+      }
+    };
+    script.onerror = () => {
+      console.error('Failed to load reCAPTCHA Enterprise script');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      const scriptToRemove = document.querySelector(`script[src^="https://www.google.com/recaptcha/enterprise.js"]`);
+      if (scriptToRemove) {
+        document.head.removeChild(scriptToRemove);
+      }
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
+    
+    // Map honeypot field name
+    const fieldName = name === 'website' ? 'honeypot' : name;
+    
     setFormData(prev => ({ 
       ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+      [fieldName]: type === 'checkbox' ? checked : value 
     }));
   };
 
@@ -33,13 +110,47 @@ export default function Contact() {
     setError('');
 
     try {
-      // Send contact form email
-      await sendContactFormEmail(formData);
+      // Get reCAPTCHA Enterprise token
+      let recaptchaToken = '';
+      
+      // Check if reCAPTCHA Enterprise is available and loaded
+      if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+        if (!recaptchaLoaded) {
+          throw new Error('Security verification is still loading. Please wait a moment and try again.');
+        }
+        
+        if (!window.grecaptcha?.enterprise) {
+          throw new Error('Security verification failed to load. Please refresh the page and try again.');
+        }
+        
+        // Execute reCAPTCHA Enterprise with action using ready callback
+        try {
+          recaptchaToken = await new Promise((resolve, reject) => {
+            window.grecaptcha.enterprise.ready(async () => {
+              try {
+                const token = await window.grecaptcha.enterprise.execute(
+                  process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!,
+                  { action: 'submit_contact_form' }
+                );
+                resolve(token);
+              } catch (error) {
+                reject(error);
+              }
+            });
+          });
+        } catch (error) {
+          console.error('reCAPTCHA Enterprise execution failed:', error);
+          throw new Error('Security verification failed. Please refresh the page and try again.');
+        }
+      }
+
+      // Send contact form email with reCAPTCHA token
+      await sendContactFormEmail({ ...formData, recaptchaToken });
       
       // If user opted in for marketing, add to early access list
       if (formData.marketingOptIn) {
         try {
-          await addToEarlyAccessList({ email: formData.email });
+          await addToEarlyAccessList({ email: formData.email, honeypot: formData.honeypot });
         } catch (err) {
           // Don't fail the whole form if adding to list fails
           console.warn('Failed to add to early access list:', err);
@@ -134,19 +245,7 @@ export default function Contact() {
         url="https://dinopix.ai/contact"
         structuredData={structuredData}
       />
-      {/* Header */}
-      <header className="px-6 py-4 border-b border-gray-100">
-        <nav className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg"></div>
-            <span className="text-xl font-bold text-gray-900">Dinopix</span>
-          </div>
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">Home</Link>
-            <a href="/contact" className="text-green-600 font-medium">Contact</a>
-          </div>
-        </nav>
-      </header>
+      <Navigation showJoinWaitlist={false} />
 
       {/* Contact Hero */}
       <section className="px-6 py-16 bg-gradient-to-br from-green-50 to-blue-50">
@@ -174,6 +273,17 @@ export default function Contact() {
             {!isSubmitted ? (
               <div>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Honeypot field - hidden from users but visible to bots */}
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.honeypot || ''}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+                
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                     Name *
@@ -263,12 +373,17 @@ export default function Contact() {
                   </label>
                 </div>
 
+                {/* reCAPTCHA Enterprise - invisible, no widget needed */}
+                
+
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || (!!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaLoaded)}
                   className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  {isLoading ? 'Sending...' : 'Send Message'}
+                  {isLoading ? 'Sending...' : 
+                   (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !recaptchaLoaded) ? 'Loading security verification...' : 
+                   'Send Message'}
                 </button>
 
                 <p className="text-xs text-gray-500">
@@ -322,25 +437,7 @@ export default function Contact() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 py-12 bg-gray-900">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-blue-500 rounded"></div>
-            <span className="text-xl font-bold text-white">Dinopix</span>
-          </div>
-          <p className="text-gray-400 mb-6">
-            AI-powered design platform launching Q2 2025
-          </p>
-          <div className="flex justify-center space-x-6 mb-4">
-            <a href="/terms" className="text-gray-400 hover:text-white transition-colors">Terms & Conditions</a>
-            <a href="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</a>
-          </div>
-          <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Dinopix Pty Ltd. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
